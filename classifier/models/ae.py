@@ -64,7 +64,7 @@ class Encoder(nn.Module):
         self,
         channels_num_lst: List[int],
         latent_dim: int,
-        inp_shape: Tuple(int, int) = (32, 32),
+        inp_shape: tuple = (32, 32),
         activation_fn: Type[C] = nn.ReLU,
     ):
         """
@@ -89,7 +89,7 @@ class Encoder(nn.Module):
                 self.inp_shape[0]
                 * self.inp_shape[1]
                 * channels_num_lst[5]
-                / (self.spatial_div**2),
+                // (self.spatial_div**2),
                 latent_dim,
             ),
         ]
@@ -148,7 +148,7 @@ class Decoder(nn.Module):
         channels_num_lst: List[int],
         latent_dim: int,
         spatial_div: int,
-        inp_shape: Tuple(int, int) = (32, 32),
+        inp_shape: tuple = (32, 32),
         activation_fn: Type[C] = nn.ReLU,
         output_activation_fn: Optional[Type[C]] = nn.Tanh,
     ):
@@ -177,7 +177,7 @@ class Decoder(nn.Module):
                 self.inp_shape[0]
                 * self.inp_shape[1]
                 * channels_num_lst[5]
-                / (self.spatial_div**2),
+                // (self.spatial_div**2),
             ),
             activation_fn(),
         )
@@ -248,7 +248,7 @@ class AutoEncoder(nn.Module):
         return AutoEncoderOutput(embeddings, out)
 
 
-def ae_from_config(config: EClrConfig) -> AutoEncoder:
+def ae_from_config(config: EClrConfig, device: str) -> AutoEncoder:
     encoder = Encoder(
         channels_num_lst=config.channels_num_lst,
         latent_dim=config.latent_dim,
@@ -263,4 +263,4 @@ def ae_from_config(config: EClrConfig) -> AutoEncoder:
         activation_fn=config.decoder_activation_fn,
         output_activation_fn=config.decoder_out_activation_fn,
     )
-    return AutoEncoder(encoder, decoder)
+    return AutoEncoder(encoder, decoder).to(device)

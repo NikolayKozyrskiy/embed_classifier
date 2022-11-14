@@ -18,7 +18,7 @@ import typer
 
 from . import load_config, EClrConfig
 from .common.wandb import WandBLoggingSink
-from .train import train_script, infer_script
+from .train import train_ae_script, infer_ae_script
 
 
 app = typer.Typer()
@@ -31,9 +31,9 @@ class DevMode(str, Enum):
 
 
 @app.command()
-def train(
+def train_ae(
     config_path: Path,
-    comment: str = typer.Option(None, "-C"),
+    comment: str = typer.Option(None, "--comment", "-C"),
     logdir: Path = None,
     gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
     dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
@@ -70,21 +70,19 @@ def train(
     )
 
     loop.launch(
-        train_script,
+        train_ae_script,
         DDPAccelerator(gpus),
         config=config,
     )
 
 
 @app.command()
-def infer(
+def infer_ae(
     config_path: Path,
     logdir: Path,
     checkpoint: str = typer.Option("best", "-c"),
     gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
     data_root: Optional[Path] = None,
-    folds: Optional[List[str]] = (),
-    split: Optional[str] = None,
     output_name: Optional[str] = None,
 ):
     config = load_config(config_path, EClrConfig)
@@ -94,13 +92,11 @@ def infer(
     )
 
     loop.launch(
-        infer_script,
+        infer_ae_script,
         DDPAccelerator(gpus),
         config=config,
         checkpoint=checkpoint,
         data_root=data_root,
-        folds=folds,
-        split=split,
         output_name=output_name,
     )
 

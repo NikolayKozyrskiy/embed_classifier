@@ -6,8 +6,8 @@ from torch import Tensor
 import torch.nn.functional as F
 from matches.shortcuts.dag import ComputationGraph, graph_node
 
-from . import EClrConfig
-from .models import AutoEncoder, AutoEncoderOutput, MPL
+from .config import EClrConfig, DatasetName, TrainSetup
+from .models import ae_from_config, AutoEncoder, AutoEncoderOutput, MPL
 
 
 class EmbedClassifierOutput(NamedTuple):
@@ -17,11 +17,18 @@ class EmbedClassifierOutput(NamedTuple):
 
 
 class EmbedClassifierPipeline(ComputationGraph):
-    def __init__(self, config: EClrConfig, ae: AutoEncoder, classifier: MPL):
+    def __init__(
+        self,
+        config: EClrConfig,
+        ae: AutoEncoder,
+        classifier: Optional[MPL],
+        classes_num: int,
+    ):
         super().__init__()
         self.config = config
         self.ae = ae
         self.classifier = classifier
+        self.classes_num = classes_num
         self.batch = None
 
     @contextlib.contextmanager
@@ -34,16 +41,28 @@ class EmbedClassifierPipeline(ComputationGraph):
             self.batch = None
 
     @graph_node
+    def gt_images(self) -> Tensor:
+        img = self.batch["image"]
+        return img
+
+    @graph_node
+    def labels(self) -> Tensor:
+        label = self.batch["label"]
+        return label
+
+    @graph_node
+    @torch.no_grad()
     def embeddings(self) -> AutoEncoderOutput:
-        return self.ae.embeddings(self.batch["image"])
+        return self.ae.embeddings(self.gt_images())
 
     @graph_node
     def reconstruct_input(self) -> AutoEncoderOutput:
-        return self.ae(self.batch["image"])
+        return self.ae(self.gt_images())
 
     @graph_node
     def predict_labels(self) -> Tensor:
-        return self.classifier(self.embeddings(self.batch["image"]).embeddings)
+        embeddings = self.embeddings().embeddings
+        return self.classifier(embeddings)
 
     @graph_node
     def predict_all(self) -> EmbedClassifierOutput:
@@ -59,3 +78,19 @@ def process_batch(batch: Tensor):
     batch_["image"] = batch[0]
     batch_["label"] = batch[1]
     return batch_
+
+
+def pipeline_from_config(config: EClrConfig, device: str) -> EmbedClassifierPipeline:
+    classes_num = 10 if config.dataset_name == DatasetName.CIFAR10 else 100
+    ae = ae_from_config(config, device)
+    if config.train_setup == TrainSetup.AE:
+        clr = None
+    else:
+        clr = MPL(
+            latent_dim=config.latent_dim,
+            feature_size_lst=config.mlp_feature_size_lst,
+            classes_num=classes_num,
+            activation_fn=config.mlp_activation_fn,
+            output_activation_fn=config.mlp_output_activation_fn,
+        ).to(device)
+    return EmbedClassifierPipeline(config, ae, clr, classes_num=classes_num)

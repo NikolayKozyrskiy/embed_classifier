@@ -13,4 +13,5 @@ conda install tensorflow=2.4.1 -c conda-forge -y
 conda install tensorboard=2.4.1 -c conda-forge -y
 conda install ipython=8.6.0 -c anaconda -y
 conda install notebook=6.5.2 -c anaconda -y
+conda install pandas=1.4.4 -c anaconda -y
 pip3 install ./libs/matches
