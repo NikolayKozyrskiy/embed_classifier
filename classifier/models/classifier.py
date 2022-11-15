@@ -27,9 +27,9 @@ class MPL(nn.Module):
             nn.Flatten(),
             nn.Linear(latent_dim, feature_size_lst[0]),
             activation_fn(),
-            nn.Linear(feature_size_lst[1], feature_size_lst[2]),
+            nn.Linear(feature_size_lst[0], feature_size_lst[1]),
             activation_fn(),
-            nn.Linear(feature_size_lst[2], classes_num),
+            nn.Linear(feature_size_lst[1], classes_num),
         ]
         if output_activation_fn is not None:
             mlp += [output_activation_fn()]

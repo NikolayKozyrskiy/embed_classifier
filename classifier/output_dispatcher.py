@@ -42,16 +42,16 @@ class OutputDispatcher:
         return psnr(pred, gt).flatten(1).mean(-1)
 
     @staticmethod
-    def clr__ce(pipeline: EmbedClassifierPipeline):
+    def clr__cross_entropy(pipeline: EmbedClassifierPipeline):
         pred = pipeline.predict_labels()
         gt = pipeline.labels()
-        return F.cross_entropy(pred, gt, reduction="none").flatten(1).sum(-1)
+        return F.cross_entropy(pred, gt, reduction="none")
 
     @staticmethod
     def clr__accuracy(pipeline: EmbedClassifierPipeline):
         pred = pipeline.predict_labels()
         gt = pipeline.labels()
-        correct = pred.max(1).eq(gt).float()
+        correct = pred.max(1)[1].eq(gt).float()
         return correct
 
     def compute_losses(self, pipeline: EmbedClassifierPipeline) -> LossDispatchResult:

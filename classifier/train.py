@@ -46,17 +46,15 @@ def train_ae_script(loop: Loop, config: EClrConfig):
     )
 
     loop.attach(ae_model=pipeline.ae, ae_optimizer=optimizer)
+    config.resume(loop)
+    config.postprocess(loop, pipeline)
+    scheduler = config.scheduler(optimizer)
+
     losses_d = defaultdict(lambda: Average(device=device))
     metrics_d = defaultdict(lambda: Average(device=device))
 
-    config.resume(loop)
-
-    config.postprocess(loop, pipeline)
-
-    scheduler = config.scheduler(optimizer)
-
-    if scheduler is not None:
-        loop.attach(ae_scheduler=scheduler)
+    # if scheduler is not None:
+    #     loop.attach(ae_scheduler=scheduler)
 
     def stage_1(loop: Loop):
         def handle_batch(batch):
@@ -146,17 +144,15 @@ def train_classifier_script(loop: Loop, config: EClrConfig):
         classifier_optimizer=optimizer,
         ae_model=pipeline.ae,
     )
+    config.resume(loop)
+    config.postprocess(loop, pipeline)
+    scheduler = config.scheduler(optimizer)
+
     losses_d = defaultdict(lambda: Average(device=device))
     metrics_d = defaultdict(lambda: Average(device=device))
 
-    config.resume(loop)
-
-    config.postprocess(loop, pipeline)
-
-    scheduler = config.scheduler(optimizer)
-
-    if scheduler is not None:
-        loop.attach(classifier_scheduler=scheduler)
+    # if scheduler is not None:
+    #     loop.attach(classifier_scheduler=scheduler)
 
     def stage_1(loop: Loop):
         def handle_batch(batch):

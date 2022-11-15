@@ -83,7 +83,7 @@ def process_batch(batch: List[Tensor]) -> Dict[str, Union[Tensor, str]]:
 
 def pipeline_from_config(config: EClrConfig, device: str) -> EmbedClassifierPipeline:
     classes_num = 10 if config.dataset_name == DatasetName.CIFAR10 else 100
-    ae = ae_from_config(config)
+    ae = ae_from_config(config).to(device)
     if config.train_setup == TrainSetup.AE:
         clr = None
     else:
@@ -94,9 +94,4 @@ def pipeline_from_config(config: EClrConfig, device: str) -> EmbedClassifierPipe
             activation_fn=config.mlp_activation_fn,
             output_activation_fn=config.mlp_output_activation_fn,
         ).to(device)
-        if config.ae_checkpoint_path is not None:
-            ae.load_state_dict(
-                torch.load(config.ae_checkpoint_path, map_location="cpu")
-            )
-    ae = ae.to(device)
     return EmbedClassifierPipeline(config, ae, clr, classes_num=classes_num)

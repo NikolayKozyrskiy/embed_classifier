@@ -102,7 +102,11 @@ class EClrConfig(BaseModel):
     def resume(self, loop: Loop):
         if self.resume_from_checkpoint is not None:
             loop.state_manager.read_state(
-                self.resume_from_checkpoint, skip_keys=["scheduler"]
+                self.resume_from_checkpoint,
+                skip_keys=[
+                    "ae_scheduler",
+                    "classifier_scheduler",
+                ],
             )
 
     def postprocess(self, loop: Loop, pipeline: "EmbedClassifierPipeline"):
