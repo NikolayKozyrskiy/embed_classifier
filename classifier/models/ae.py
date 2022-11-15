@@ -1,5 +1,6 @@
 from typing import Callable, List, Tuple, Type, TypeVar, Optional, NamedTuple
 
+import torch
 from torch import Tensor
 import torch.nn as nn
 
@@ -248,19 +249,19 @@ class AutoEncoder(nn.Module):
         return AutoEncoderOutput(embeddings, out)
 
 
-def ae_from_config(config: EClrConfig, device: str) -> AutoEncoder:
+def ae_from_config(config: EClrConfig) -> AutoEncoder:
     encoder = Encoder(
-        channels_num_lst=config.channels_num_lst,
+        channels_num_lst=config.ae_channels_num_lst,
         latent_dim=config.latent_dim,
         inp_shape=config.image_size,
         activation_fn=config.encoder_activation_fn,
     )
     decoder = Decoder(
-        channels_num_lst=config.channels_num_lst,
+        channels_num_lst=config.ae_channels_num_lst,
         latent_dim=config.latent_dim,
         spatial_div=encoder.spatial_div,
         inp_shape=config.image_size,
         activation_fn=config.decoder_activation_fn,
         output_activation_fn=config.decoder_out_activation_fn,
     )
-    return AutoEncoder(encoder, decoder).to(device)
+    return AutoEncoder(encoder, decoder)

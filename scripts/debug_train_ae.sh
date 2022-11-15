@@ -1,1 +1,0 @@
-CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae.py -g 0 -C "1_debug_train_ae" -m short

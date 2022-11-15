@@ -33,7 +33,7 @@ class OutputDispatcher:
     def ae__mse(pipeline: EmbedClassifierPipeline):
         pred = pipeline.reconstruct_input().reconstructed_img
         gt = pipeline.gt_images()
-        return F.mse_loss(pred, gt, reduction="none").flatten(1).mean(-1)
+        return F.mse_loss(pred, gt, reduction="none").flatten(1).sum(-1)
 
     @staticmethod
     def ae__psnr(pipeline: EmbedClassifierPipeline):
@@ -45,7 +45,7 @@ class OutputDispatcher:
     def clr__ce(pipeline: EmbedClassifierPipeline):
         pred = pipeline.predict_labels()
         gt = pipeline.labels()
-        return F.cross_entropy(pred, gt, reduction="none").flatten(1).mean(-1)
+        return F.cross_entropy(pred, gt, reduction="none").flatten(1).sum(-1)
 
     @staticmethod
     def clr__accuracy(pipeline: EmbedClassifierPipeline):

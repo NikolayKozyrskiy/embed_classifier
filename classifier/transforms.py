@@ -4,11 +4,15 @@ import torchvision.transforms as tr
 
 
 def wrap_transforms(transforms: List) -> tr.Compose:
-    return tr.Compose(transforms=transforms + to_tensor_normalized())
+    return tr.Compose(transforms=transforms + to_tensor())
 
 
 def train_basic_augs() -> List:
     return [tr.RandomCrop(32, padding=4), tr.RandomHorizontalFlip()]
+
+
+def to_tensor() -> List:
+    return [tr.ToTensor()]
 
 
 def to_tensor_normalized() -> List:

@@ -59,7 +59,7 @@ class EClrConfig(BaseModel):
     loss_aggregation_weigths: Dict[str, float]
     metrics: List[str]
 
-    channels_num_lst: List[int] = [3, 16, 32, 32, 32, 32]
+    ae_channels_num_lst: List[int] = [3, 16, 32, 32, 32, 32]
     latent_dim: int = 128
     encoder_activation_fn: Optional[Type[C]] = nn.ReLU
     decoder_activation_fn: Optional[Type[C]] = nn.ReLU
@@ -86,6 +86,7 @@ class EClrConfig(BaseModel):
     output_config: list[
         Callable[["EmbedClassifierPipeline", Executor, Path], None]
     ] = []
+    preview_image_fns: List[Callable] = []
 
     image_size = (32, 32)
 
@@ -104,7 +105,7 @@ class EClrConfig(BaseModel):
                 self.resume_from_checkpoint, skip_keys=["scheduler"]
             )
 
-    def model_postprocess(self, model):
+    def postprocess(self, loop: Loop, pipeline: "EmbedClassifierPipeline"):
         pass
 
 

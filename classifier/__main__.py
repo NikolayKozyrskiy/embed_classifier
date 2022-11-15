@@ -18,7 +18,7 @@ import typer
 
 from . import load_config, EClrConfig
 from .common.wandb import WandBLoggingSink
-from .train import train_ae_script, infer_ae_script
+from .train import train_ae_script, infer_ae_script, train_classifier_script
 
 
 app = typer.Typer()
@@ -71,6 +71,52 @@ def train_ae(
 
     loop.launch(
         train_ae_script,
+        DDPAccelerator(gpus),
+        config=config,
+    )
+
+
+@app.command()
+def train_classifier(
+    config_path: Path,
+    comment: str = typer.Option(None, "--comment", "-C"),
+    logdir: Path = None,
+    gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
+    dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
+):
+    config: EClrConfig = load_config(config_path, EClrConfig)
+
+    comment = comment or config.comment
+    if comment is None:
+        comment = config_path.stem
+    config.comment = comment
+
+    logdir = logdir or unique_logdir(Path("logs/"), comment)
+
+    callbacks = [
+        WandBLoggingSink(comment, config),
+        # EnsureWorkdirCleanOrDevMode(),
+        # ProfilerCallback(),
+        # MemLeakDebugCallback(),
+        # MemProfilerCallback(),
+        TqdmProgressCallback(),
+    ]
+    if dev_mode != DevMode.OVERFIT_BATCH:
+        callbacks += [
+            BestModelSaver(config.monitor),
+            LastModelSaverCallback(),
+        ]
+
+    logdir.mkdir(exist_ok=True, parents=True)
+    copy(config_path, logdir / "config.py", follow_symlinks=True)
+    loop = Loop(
+        logdir,
+        callbacks,
+        loader_override=dev_mode.value,
+    )
+
+    loop.launch(
+        train_classifier_script,
         DDPAccelerator(gpus),
         config=config,
     )

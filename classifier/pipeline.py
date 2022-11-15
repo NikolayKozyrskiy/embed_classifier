@@ -1,5 +1,5 @@
 import contextlib
-from typing import Callable, List, Tuple, Type, Dict, Optional, NamedTuple
+from typing import Union, List, Tuple, Type, Dict, Optional, NamedTuple
 
 import torch
 from torch import Tensor
@@ -32,7 +32,7 @@ class EmbedClassifierPipeline(ComputationGraph):
         self.batch = None
 
     @contextlib.contextmanager
-    def batch_scope(self, batch: Tensor):
+    def batch_scope(self, batch: List[Tensor]):
         try:
             with self.cache_scope():
                 self.batch = process_batch(batch)
@@ -73,16 +73,17 @@ class EmbedClassifierPipeline(ComputationGraph):
         )
 
 
-def process_batch(batch: Tensor):
+def process_batch(batch: List[Tensor]) -> Dict[str, Union[Tensor, str]]:
     batch_ = {}
     batch_["image"] = batch[0]
     batch_["label"] = batch[1]
+    batch_["name"] = batch[2]
     return batch_
 
 
 def pipeline_from_config(config: EClrConfig, device: str) -> EmbedClassifierPipeline:
     classes_num = 10 if config.dataset_name == DatasetName.CIFAR10 else 100
-    ae = ae_from_config(config, device)
+    ae = ae_from_config(config)
     if config.train_setup == TrainSetup.AE:
         clr = None
     else:
@@ -93,4 +94,9 @@ def pipeline_from_config(config: EClrConfig, device: str) -> EmbedClassifierPipe
             activation_fn=config.mlp_activation_fn,
             output_activation_fn=config.mlp_output_activation_fn,
         ).to(device)
+        if config.ae_checkpoint_path is not None:
+            ae.load_state_dict(
+                torch.load(config.ae_checkpoint_path, map_location="cpu")
+            )
+    ae = ae.to(device)
     return EmbedClassifierPipeline(config, ae, clr, classes_num=classes_num)

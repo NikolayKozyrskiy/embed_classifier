@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-classifier configs/train_classifier.py -g 0 -C "1_train_classifier"
