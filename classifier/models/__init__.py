@@ -1,2 +1,2 @@
-from .ae import AutoEncoder, AutoEncoderOutput, ae_from_config
 from .classifier import MPL
+from .ae import AE, AEOutput

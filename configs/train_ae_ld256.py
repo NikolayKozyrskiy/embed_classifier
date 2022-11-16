@@ -12,7 +12,13 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 
 from classifier.config import EClrConfig, DatasetName, TrainSetup, AEArchitecture
 from classifier.transforms import train_basic_augs
-from classifier.common.vis import images_gt, images_reconstructed
+from classifier.common.vis import (
+    images_gt,
+    images_reconstructed,
+    log_embeddings_to_tb_batch,
+    log_generated_images_to_tb_batch,
+    log_images_to_tb_batch,
+)
 
 
 class Config(EClrConfig):
@@ -45,7 +51,7 @@ config = Config(
     ae_architecture=AEArchitecture.VANILLA,
     is_vae=False,
     ae_channels_num_lst=[3, 32, 64, 128, 256, 256],
-    latent_dim=64,
+    latent_dim=256,
     encoder_activation_fn=nn.ReLU,
     decoder_activation_fn=nn.ReLU,
     decoder_out_activation_fn=nn.Sigmoid,  # nn.Tanh, None
@@ -64,5 +70,10 @@ config = Config(
     shuffle_train=True,
     output_config=[],
     preview_image_fns=[images_gt, images_reconstructed],
+    log_vis_fns=[
+        log_images_to_tb_batch,
+        log_generated_images_to_tb_batch,
+        log_embeddings_to_tb_batch,
+    ],
     image_size=(32, 32),
 )

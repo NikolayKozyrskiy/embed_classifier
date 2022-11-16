@@ -80,6 +80,58 @@ def log_images_to_tb_batch(loop: Loop, pipeline: EmbedClassifierPipeline, prefix
     )
 
 
+def log_generated_images_to_tb_batch(
+    loop: Loop, pipeline: EmbedClassifierPipeline, prefix: str
+):
+    with loop.mode():
+        images = pipeline.sample()
+
+    ep = loop.iterations.current_epoch
+    data = {"epochs": ep}
+    for idx, im in enumerate(images):
+        id_ = f"{prefix}/{idx}"
+        root = loop.logdir / f"history/image_generated/{prefix}"
+        root.mkdir(exist_ok=True, parents=True)
+
+        res_path = root / f"{idx}__{ep:03d}.jpg"
+        imageio.v3.imwrite(res_path, tensor_to_image(im, keepdim=False))
+        data[f"images_generated/{id_}"] = wandb.Image(
+            str(res_path.resolve()), caption=f"ep={ep}"
+        )
+
+    wandb.log(
+        data,
+        commit=False,
+    )
+
+
+def log_embeddings_to_tb_batch(
+    loop: Loop, pipeline: EmbedClassifierPipeline, prefix: str
+):
+    with loop.mode():
+        emdeddings = pipeline.embeddings().embeddings.detach().cpu()
+        labels = pipeline.labels().detach().cpu()
+
+    ep = loop.iterations.current_epoch
+    data = {"epochs": ep}
+    samples_num = 100
+    columns = ["label"] + [f"e{i}" for i in range(pipeline.config.latent_dim)]
+    rows = torch.cat(
+        (labels[:samples_num].unsqueeze(1), emdeddings[:samples_num, :]), dim=1
+    ).tolist()
+    for i in range(samples_num):
+        rows[i][0] = str(int(rows[i][0]))
+    data[f"emdeddings/{prefix}/{pipeline.config.comment}"] = wandb.Table(
+        columns=columns,
+        data=rows,
+    )
+
+    wandb.log(
+        data,
+        commit=False,
+    )
+
+
 def images_gt(pipeline: EmbedClassifierPipeline):
     return pipeline.gt_images().clone()
 

@@ -23,7 +23,11 @@ from .data import get_train_loader, get_validation_loader
 from .pipeline import EmbedClassifierPipeline, pipeline_from_config
 from .output_dispatcher import OutputDispatcher, filter_and_uncollate
 from .common.utils import enumerate_normalized, log_optimizer_lrs
-from .common.vis import log_images_to_tb_batch
+from .common.vis import (
+    log_images_to_tb_batch,
+    log_generated_images_to_tb_batch,
+    log_embeddings_to_tb_batch,
+)
 
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
 
@@ -97,6 +101,7 @@ def train_ae_script(loop: Loop, config: EClrConfig):
                         )
                     ):
                         log_images_to_tb_batch(loop, pipeline, "train")
+                        log_embeddings_to_tb_batch(loop, pipeline, "train")
 
             if scheduler is not None:
                 scheduler.step(SchedulerScopeType.EPOCH, epoch)
@@ -111,7 +116,8 @@ def train_ae_script(loop: Loop, config: EClrConfig):
                 handle_batch(batch)
                 if i == 0:
                     with pipeline.batch_scope(batch):
-                        log_images_to_tb_batch(loop, pipeline, "valid")
+                        for fn in config.log_vis_fns:
+                            fn(loop, pipeline, "valid")
             for name, value in losses_d.items():
                 loop.metrics.consume(f"valid/{name}", value)
             for name, value in metrics_d.items():

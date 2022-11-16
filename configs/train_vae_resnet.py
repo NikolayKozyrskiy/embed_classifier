@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
-from matches.loop import Loop
 from matches.shortcuts.optimizer import (
     LRSchedulerProto,
     LRSchedulerWrapper,
@@ -9,19 +8,16 @@ from matches.shortcuts.optimizer import (
 )
 from torch import nn
 from torch.optim import Adam, Optimizer, SGD
-from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
 
-from classifier.config import EClrConfig, DatasetName, TrainSetup
+from classifier.config import EClrConfig, DatasetName, TrainSetup, AEArchitecture
 from classifier.transforms import train_basic_augs
 from classifier.common.vis import images_gt, images_reconstructed
-
-if TYPE_CHECKING:
-    from classifier.pipeline import EmbedClassifierPipeline
 
 
 class Config(EClrConfig):
     def optimizer(self, model: nn.Module):
-        # return SGD(model.parameters(), lr=self.lr, momentum=0.9, weight_decay=5e-3)
+        # return SGD(model.parameters(), lr=self.lr, momentum=0.9, weight_decay=5e-4)
         return Adam(model.parameters(), lr=self.lr)
 
     def scheduler(self, optimizer: Optimizer) -> Optional[LRSchedulerProto]:
@@ -32,51 +28,42 @@ class Config(EClrConfig):
 
     # def scheduler(self, optimizer: Optimizer) -> Optional[LRSchedulerProto]:
     #     return LRSchedulerWrapper(
-    #         StepLR(optimizer, step_size=25, gamma=0.5),
+    #         ReduceLROnPlateau(
+    #             optimizer, mode="min", factor=0.2, patience=20, min_lr=5e-5
+    #         ),
     #         scope_type=SchedulerScopeType.EPOCH,
     #     )
 
-    def postprocess(self, loop: Loop, pipeline: "EmbedClassifierPipeline") -> None:
-        loop.state_manager.read_state(
-            self.ae_checkpoint_path,
-            skip_keys=[
-                "ae_scheduler",
-                "ae_optimizer",
-                "classifier_model",
-                "classifier_optimizer",
-            ],
-        )
-
 
 config = Config(
-    comment="train_classifier",
+    comment="train_vae",
     data_root="_data",
     dataset_name=DatasetName.CIFAR10,
-    train_setup=TrainSetup.CLR,
-    loss_aggregation_weigths={"clr/cross_entropy": 1.0},
-    monitor="valid/clr/accuracy",
-    metrics=["clr/accuracy"],
-    is_vae=False,
+    train_setup=TrainSetup.AE,
+    loss_aggregation_weigths={"recon/mse": 1.0, "vae/kl": 1.0},
+    monitor="valid/recon/mse",
+    metrics=["recon/psnr"],
+    ae_architecture=AEArchitecture.RESNET18,
+    is_vae=True,
     ae_channels_num_lst=[3, 32, 64, 128, 256, 256],
-    latent_dim=32,
+    latent_dim=64,
     encoder_activation_fn=nn.ReLU,
     decoder_activation_fn=nn.ReLU,
     decoder_out_activation_fn=nn.Sigmoid,  # nn.Tanh, None
-    ae_checkpoint_path="logs/ae_ld32_v1/221116_0133/best.pth",
-    # ae_checkpoint_path="logs/3_ae/221115_2248/best.pth",
-    mlp_feature_size_lst=[128, 64],
-    mlp_activation_fn=nn.ReLU,
-    mlp_output_activation_fn=None,
-    classifier_checkpoint_path=None,
+    ae_checkpoint_path=None,
+    # mlp_feature_size_lst=[256, 256, 128],
+    # mlp_activation_fn=nn.ReLU,
+    # mlp_output_activation_fn=None,
+    # classifier_checkpoint_path=None,
     batch_size=200,
     lr=1e-3,
-    max_epoch=50,
+    max_epoch=150,
     train_transforms=[],  # train_basic_augs(),
     valid_transforms=[],
     data_loader_workers=8,
     single_pass_length=1.0,
     shuffle_train=True,
     output_config=[],
-    preview_image_fns=[],
+    preview_image_fns=[images_gt, images_reconstructed],
     image_size=(32, 32),
 )

@@ -2,6 +2,7 @@ from typing import Dict, NamedTuple, List
 
 import torch
 from torch import Tensor
+from torch.distributions import Normal, kl_divergence
 import torch.nn.functional as F
 
 from .pipeline import EmbedClassifierPipeline
@@ -30,16 +31,25 @@ class OutputDispatcher:
         self._prepare_metric_fns()
 
     @staticmethod
-    def ae__mse(pipeline: EmbedClassifierPipeline):
+    def recon__mse(pipeline: EmbedClassifierPipeline):
         pred = pipeline.reconstruct_input().reconstructed_img
         gt = pipeline.gt_images()
         return F.mse_loss(pred, gt, reduction="none").flatten(1).sum(-1)
 
     @staticmethod
-    def ae__psnr(pipeline: EmbedClassifierPipeline):
+    def recon__psnr(pipeline: EmbedClassifierPipeline):
         pred = pipeline.reconstruct_input().reconstructed_img
         gt = pipeline.gt_images()
         return psnr(pred, gt).flatten(1).mean(-1)
+
+    @staticmethod
+    def vae__kl(pipeline: EmbedClassifierPipeline):
+        vae_pred = pipeline.embeddings()
+        std = torch.exp(vae_pred.log_var / 2)
+        return kl_divergence(
+            Normal(vae_pred.mu, std),
+            Normal(torch.zeros_like(vae_pred.mu), torch.ones_like(std)),
+        )
 
     @staticmethod
     def clr__cross_entropy(pipeline: EmbedClassifierPipeline):

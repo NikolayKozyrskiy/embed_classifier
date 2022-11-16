@@ -1,26 +1,31 @@
 import contextlib
-from typing import Union, List, Tuple, Type, Dict, Optional, NamedTuple
+from typing import Union, List, Tuple, Type, Dict, Optional, NamedTuple, TYPE_CHECKING
 
 import torch
 from torch import Tensor
 import torch.nn.functional as F
 from matches.shortcuts.dag import ComputationGraph, graph_node
 
-from .config import EClrConfig, DatasetName, TrainSetup
-from .models import ae_from_config, AutoEncoder, AutoEncoderOutput, MPL
+from .models import AE, MPL, AEOutput
+from .config import DatasetName, TrainSetup, AEArchitecture
+
+if TYPE_CHECKING:
+    from .config import EClrConfig
 
 
 class EmbedClassifierOutput(NamedTuple):
     logits: Optional[Tensor]
     embeddings: Optional[Tensor]
     reconstructed_img: Optional[Tensor]
+    mu: Optional[Tensor]
+    log_var: Optional[Tensor]
 
 
 class EmbedClassifierPipeline(ComputationGraph):
     def __init__(
         self,
-        config: EClrConfig,
-        ae: AutoEncoder,
+        config: "EClrConfig",
+        ae: AE,
         classifier: Optional[MPL],
         classes_num: int,
     ):
@@ -51,25 +56,34 @@ class EmbedClassifierPipeline(ComputationGraph):
         return label
 
     @graph_node
-    @torch.no_grad()
-    def embeddings(self) -> AutoEncoderOutput:
+    def embeddings(self) -> AEOutput:
         return self.ae.embeddings(self.gt_images())
 
     @graph_node
-    def reconstruct_input(self) -> AutoEncoderOutput:
+    def reconstruct_input(self) -> AEOutput:
         return self.ae(self.gt_images())
 
     @graph_node
+    def sample(self) -> Tensor:
+        return self.ae.sample(6, device=self.batch["label"].device)
+
+    @graph_node
     def predict_labels(self) -> Tensor:
-        embeddings = self.embeddings().embeddings
+        with torch.no_grad():
+            self.ae.eval()
+            embeddings = self.embeddings().embeddings
         return self.classifier(embeddings)
 
     @graph_node
     def predict_all(self) -> EmbedClassifierOutput:
-        ae_res: AutoEncoderOutput = self.reconstruct_input()
+        ae_res: AEOutput = self.reconstruct_input()
         logits = self.classifier(ae_res.embeddings)
         return EmbedClassifierOutput(
-            logits, ae_res.embeddings, ae_res.reconstructed_img
+            logits,
+            ae_res.embeddings,
+            ae_res.reconstructed_img,
+            ae_res.mu,
+            ae_res.log_var,
         )
 
 
@@ -81,9 +95,15 @@ def process_batch(batch: List[Tensor]) -> Dict[str, Union[Tensor, str]]:
     return batch_
 
 
-def pipeline_from_config(config: EClrConfig, device: str) -> EmbedClassifierPipeline:
-    classes_num = 10 if config.dataset_name == DatasetName.CIFAR10 else 100
+def pipeline_from_config(config: "EClrConfig", device: str) -> EmbedClassifierPipeline:
+    if config.ae_architecture == AEArchitecture.VANILLA:
+        from .models.ae_vanilla import ae_from_config
+    elif config.ae_architecture == AEArchitecture.RESNET18:
+        from .models.ae_resnet import ae_from_config
+    else:
+        raise NotImplementedError
     ae = ae_from_config(config).to(device)
+    classes_num = 10 if config.dataset_name == DatasetName.CIFAR10 else 100
     if config.train_setup == TrainSetup.AE:
         clr = None
     else:

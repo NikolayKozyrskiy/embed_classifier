@@ -1,0 +1,8 @@
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae_ld32.py -g 0 -C "ae_ld32_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_vae_ld32.py -g 0 -C "vae_ld32_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae_ld64.py -g 0 -C "ae_ld64_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_vae_ld64.py -g 0 -C "vae_ld64_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae_ld128.py -g 0 -C "ae_ld128_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_vae_ld128.py -g 0 -C "vae_ld128_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae_ld256.py -g 0 -C "ae_ld256_v2"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_vae_ld256.py -g 0 -C "vae_ld256_v2"

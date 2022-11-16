@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae.py -g 0 -C "1_train_ae"
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_ae.py -g 0 -C "2_train_ae"

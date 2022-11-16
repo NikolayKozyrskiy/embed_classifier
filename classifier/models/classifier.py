@@ -3,8 +3,6 @@ from typing import Callable, List, Type, TypeVar, Optional
 from torch import Tensor
 import torch.nn as nn
 
-from ..config import EClrConfig
-
 
 C = TypeVar("C", bound=Callable)
 

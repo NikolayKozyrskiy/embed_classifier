@@ -1,4 +1,5 @@
 from typing import Tuple, Any
+import os
 
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
@@ -45,6 +46,7 @@ class CifarDatasetWrapper(Dataset):
 
 
 def get_train_dataset(config: EClrConfig) -> Dataset:
+    os.makedirs(config.data_root, exist_ok=True)
     if config.dataset_name == DatasetName.CIFAR10:
         return CifarDatasetWrapper(
             datasets.CIFAR10(

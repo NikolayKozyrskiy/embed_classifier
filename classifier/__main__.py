@@ -16,7 +16,7 @@ from matches.loop import Loop
 from matches.utils import unique_logdir
 import typer
 
-from . import load_config, EClrConfig
+from .config import load_config, EClrConfig
 from .common.wandb import WandBLoggingSink
 from .train import train_ae_script, infer_ae_script, train_classifier_script
 
@@ -57,7 +57,7 @@ def train_ae(
     ]
     if dev_mode != DevMode.OVERFIT_BATCH:
         callbacks += [
-            BestModelSaver(config.monitor),
+            BestModelSaver(config.monitor, metric_mode="min"),
             LastModelSaverCallback(),
         ]
 
@@ -103,7 +103,7 @@ def train_classifier(
     ]
     if dev_mode != DevMode.OVERFIT_BATCH:
         callbacks += [
-            BestModelSaver(config.monitor),
+            BestModelSaver(config.monitor, metric_mode="max"),
             LastModelSaverCallback(),
         ]
 

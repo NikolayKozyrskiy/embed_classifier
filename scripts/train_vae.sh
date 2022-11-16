@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python3 -m classifier train-ae configs/train_vae_ld64.py -g 0 -C "vae_ld64_v4"

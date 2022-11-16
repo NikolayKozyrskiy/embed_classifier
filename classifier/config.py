@@ -48,6 +48,11 @@ class TrainSetup(str, Enum):
     E2E = "end_to_end"
 
 
+class AEArchitecture(str, Enum):
+    VANILLA = "vanilla"
+    RESNET18 = "resnet18"
+
+
 class EClrConfig(BaseModel):
     class Config:
         arbitrary_types_allowed = True
@@ -59,6 +64,8 @@ class EClrConfig(BaseModel):
     loss_aggregation_weigths: Dict[str, float]
     metrics: List[str]
 
+    ae_architecture: AEArchitecture = AEArchitecture.VANILLA
+    is_vae: bool = False
     ae_channels_num_lst: List[int] = [3, 16, 32, 32, 32, 32]
     latent_dim: int = 128
     encoder_activation_fn: Optional[Type[C]] = nn.ReLU
@@ -80,13 +87,14 @@ class EClrConfig(BaseModel):
     comment: Optional[str] = "default_comment"
     data_loader_workers: int = 4
     single_pass_length: float = 1.0
-    monitor = "valid/accuracy"
+    monitor: str = "valid/accuracy"
     resume_from_checkpoint: Optional[Path] = None
     shuffle_train: bool = True
     output_config: list[
         Callable[["EmbedClassifierPipeline", Executor, Path], None]
     ] = []
     preview_image_fns: List[Callable] = []
+    log_vis_fns: List[Callable] = []
 
     image_size = (32, 32)
 
@@ -111,10 +119,6 @@ class EClrConfig(BaseModel):
 
     def postprocess(self, loop: Loop, pipeline: "EmbedClassifierPipeline"):
         pass
-
-
-def pipeline_from_config():
-    return None
 
 
 def load_config(config_path: Path, desired_class):
