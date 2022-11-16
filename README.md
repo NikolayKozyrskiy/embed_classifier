@@ -32,7 +32,15 @@ To reproduce the latest results run script:
 ```bash
 source scripts/train_ae_and_vae.sh
 ```
-The random seeds are fixed so that the experiments are reproducible. For baseline architectures I took ligh-weigth neural networks for fast training.
+After the script finishes, to train classifiers run:
+```bash
+source scripts/train_classifier.sh
+```
+
+
+The random seeds are fixed so that the experiments are reproducible. 
+
+For baseline architectures I took ligh-weigth neural networks for fast training.
 [wandb](https://wandb.ai) is used to log results. On the first run you will be asked your authorization token if wandb is not initialized on your machine.
 All training and validation loss and metrics values are logged locally and sent to wandb. During training procedure of autoencoder the gt, reconstructed and sampled images are logged to wandb. 
 
