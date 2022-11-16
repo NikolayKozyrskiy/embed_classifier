@@ -11,7 +11,7 @@ from torch import nn
 from torch.optim import Adam, Optimizer, SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 
-from classifier.config import EClrConfig, DatasetName, TrainSetup
+from classifier.config import EClrConfig, DatasetName, TrainSetup, AEArchitecture
 from classifier.transforms import train_basic_augs
 from classifier.common.vis import images_gt, images_reconstructed
 
@@ -56,13 +56,14 @@ config = Config(
     loss_aggregation_weigths={"clr/cross_entropy": 1.0},
     monitor="valid/clr/accuracy",
     metrics=["clr/accuracy"],
+    ae_architecture=AEArchitecture.VANILLA,
     is_vae=False,
     ae_channels_num_lst=[3, 32, 64, 128, 256, 256],
     latent_dim=128,
     encoder_activation_fn=nn.ReLU,
     decoder_activation_fn=nn.ReLU,
     decoder_out_activation_fn=nn.Sigmoid,  # nn.Tanh, None
-    ae_checkpoint_path="logs/ae_ld128_v1/221116_0312/best.pth",
+    ae_checkpoint_path="logs/ae_ld128_v2/221116_2012/last.pth",
     # ae_checkpoint_path="logs/3_ae/221115_2248/best.pth",
     mlp_feature_size_lst=[128, 64],
     mlp_activation_fn=nn.ReLU,
