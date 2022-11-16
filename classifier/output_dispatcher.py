@@ -49,7 +49,7 @@ class OutputDispatcher:
         return kl_divergence(
             Normal(vae_pred.mu, std),
             Normal(torch.zeros_like(vae_pred.mu), torch.ones_like(std)),
-        )
+        ).sum(1)
 
     @staticmethod
     def clr__cross_entropy(pipeline: EmbedClassifierPipeline):
@@ -141,6 +141,8 @@ class OutputDispatcher:
 
 def filter_and_uncollate(batch_values: Dict[str, Tensor], pipeline):
     batch_values = {k: v.tolist() for k, v in batch_values.items() if k != "_total"}
+    # for k, v in batch_values.items():
+    #     print(f"k : {k}, len(v) = {len(v)}, len(v[0]) = {len(v[0])}")
     return uncollate(batch_values)
     # return batch_values
 

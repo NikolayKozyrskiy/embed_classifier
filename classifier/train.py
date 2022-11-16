@@ -237,7 +237,6 @@ def infer_ae_script(
 
     data_root = config.data_root if data_root is None else data_root
     output_name = checkpoint if output_name is None else output_name
-    split = config.split if split is None else split
 
     loader = get_validation_loader(config)
     pipeline = pipeline_from_config(config, device)
@@ -246,7 +245,7 @@ def infer_ae_script(
         loss_aggregation_weigths=config.loss_aggregation_weigths, metrics=config.metrics
     )
 
-    loop.attach(model=pipeline.ae)
+    loop.attach(ae_model=pipeline.ae)
     loop.state_manager.read_state(loop.logdir / f"{checkpoint}.pth")
 
     def infer(loop: Loop):
@@ -269,7 +268,6 @@ def infer_classifier_script(
 
     data_root = config.data_root if data_root is None else data_root
     output_name = checkpoint if output_name is None else output_name
-    split = config.split if split is None else split
 
     loader = get_validation_loader(config)
     pipeline = pipeline_from_config(config, device)
@@ -278,7 +276,12 @@ def infer_classifier_script(
         loss_aggregation_weigths=config.loss_aggregation_weigths, metrics=config.metrics
     )
 
-    loop.attach(model=pipeline.classifier)
+    loop.attach(
+        classifier_model=pipeline.classifier,
+        ae_model=pipeline.ae,
+    )
+    config.resume(loop)
+    config.postprocess(loop, pipeline)
     loop.state_manager.read_state(loop.logdir / f"{checkpoint}.pth")
 
     def infer(loop: Loop):

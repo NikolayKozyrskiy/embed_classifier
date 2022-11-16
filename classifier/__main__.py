@@ -18,7 +18,7 @@ import typer
 
 from .config import load_config, EClrConfig
 from .common.wandb import WandBLoggingSink
-from .train import train_ae_script, infer_ae_script, train_classifier_script
+from .train import train_ae_script, infer_ae_script, train_classifier_script, infer_classifier_script
 
 
 app = typer.Typer()
@@ -139,6 +139,30 @@ def infer_ae(
 
     loop.launch(
         infer_ae_script,
+        DDPAccelerator(gpus),
+        config=config,
+        checkpoint=checkpoint,
+        data_root=data_root,
+        output_name=output_name,
+    )
+
+@app.command()
+def infer_classifier(
+    config_path: Path,
+    logdir: Path,
+    checkpoint: str = typer.Option("best", "-c"),
+    gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
+    data_root: Optional[Path] = None,
+    output_name: Optional[str] = None,
+):
+    config = load_config(config_path, EClrConfig)
+    loop = Loop(
+        logdir,
+        [TqdmProgressCallback()],
+    )
+
+    loop.launch(
+        infer_classifier_script,
         DDPAccelerator(gpus),
         config=config,
         checkpoint=checkpoint,

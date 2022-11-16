@@ -89,8 +89,8 @@ def log_generated_images_to_tb_batch(
     ep = loop.iterations.current_epoch
     data = {"epochs": ep}
     for idx, im in enumerate(images):
-        id_ = f"{prefix}/{idx}"
-        root = loop.logdir / f"history/image_generated/{prefix}"
+        id_ = f"{idx}"
+        root = loop.logdir / f"history/image_generated/{id_}"
         root.mkdir(exist_ok=True, parents=True)
 
         res_path = root / f"{idx}__{ep:03d}.jpg"

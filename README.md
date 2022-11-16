@@ -30,12 +30,18 @@ source scripts/create_env.sh
 All scripts must be run from the project root.
 To reproduce the latest results run script:
 ```bash
-source scripts/train_ae_and_vae.sh
+sh scripts/train_ae_and_vae.sh
 ```
 After the script finishes, to train classifiers run:
 ```bash
-source scripts/train_classifier.sh
+sh scripts/train_classifier.sh
 ```
+To validate the trained models use the following scripts for autoencoder and classifier correspondingly:
+```bash
+sh scripts/eval_ae.sh
+sh scripts/eval_classifier.sh
+```
+You need to change the `config_path`, `logdir` and `checkpoint` values in these scripts according to your onw ones. The attached scripts can treated as examples.
 
 
 The random seeds are fixed so that the experiments are reproducible. 
@@ -44,7 +50,7 @@ For baseline architectures I took ligh-weigth neural networks for fast training.
 [wandb](https://wandb.ai) is used to log results. On the first run you will be asked your authorization token if wandb is not initialized on your machine.
 All training and validation loss and metrics values are logged locally and sent to wandb. During training procedure of autoencoder the gt, reconstructed and sampled images are logged to wandb. 
 
-I also use the wandb functionality to vizualize the embeddings. On the project page on wandb one can choose the dimentionality reduction method on the corresponding panel. Among the available methods are PCA, t-SNE and UMAP. The visualization is only possible in 2-dimensions, i.e. plain image. 
+I also use the wandb functionality to vizualize the embeddings. On the project page on wandb one can choose the dimentionality reduction method on the corresponding panel. Among the available methods are PCA, t-SNE and UMAP. The visualization is only possible in 2-dimensions, i.e. plain image. According to the obtained visualizations the embeddings can't be classified well in 2-dimensional case even with non-linear reduction methods like t-SNE and UMAP.
 
 
 ## Baseline
