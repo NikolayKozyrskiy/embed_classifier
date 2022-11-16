@@ -14,7 +14,7 @@ cd embed_classifier
 source scripts/create_env.sh
 ```
 
-The dataset will be downloaded on demand automatically.
+[CIFAR10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset will be downloaded on demand automatically.
 
 ## Structure of the project
 * The architecture of the autoencoder and classifier are in `classifier/models/*`.
