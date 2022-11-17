@@ -101,10 +101,8 @@ As one can see, all basic autoencoders can't generate meaningfull results from v
 
 ## Other possible improvements
 
-One direction of improvement is to use more powerful and efficient Encoder and Decoder architectures which can extract better features from dataset images in order to be able to construct a better latent space. Ecoder and Decoder with Resnet18 backbones are implemented in the project as examples.
+The main idea is to organize the latent space in such a way that the emdebbings of different samples can be easily separated preserving the reconstruction ability of autoencoder. Some kind of regularization by triplet loss may help to minimize the intra-class distances and maxmize the inter-class distances in latent space. As a result the embeddings of samples from the same class will be close to each other and far from embeddings of samples from other classes in latent space. One more possible regularizations on the latent space can be the something like anti-correlation loss, which will force the embeddings of samples of different classes to be uncorrelated or in the best case orthogonal. Such embeddings should be easily classified even by classical ML algorithms.
 
-The main idea is to organize the latent space in such a way that the emdebbings of different samples can be easily separated preserving the reconstruction ability of autoencoder.
+Another direction of improvement is to use more powerful and efficient Encoder and Decoder architectures which can extract better features from dataset images in order to be able to construct a better latent space. Ecoder and Decoder with Resnet18 backbones are implemented in the project as examples.
 
-Another possible approach to improve classifier performance is add the Cross-Entropy loss in training VAE which will introduce another corresponding restrictions on the latent space construction.
-
-One more possible regularizations on the latent space can be the something like anti-correlation loss, which will force the embeddings of samples of different classes to be uncorrelated or in the best case orthogonal. Such embeddings should be easily classified even by classical ML algorithms.
+One more possible approach to improve classifier performance is add the Cross-Entropy loss in training VAE which will introduce another corresponding restrictions on the latent space construction.
